@@ -35,23 +35,16 @@ module.exports = function hashmark(contents, options, callback) {
             callback(null, map);
         });
     }
-
-    contents.forEach(function(contents){
-      if (contents instanceof Stream.Readable) {
-          contents.fileName = contents.fileName || '<anonymous>';
-          fileContents(contents);
-      } else {
-          fs.stat(contents, function(err, stats){
-              if(stats.isFile()){
-                var stream = fs.createReadStream(contents);
-                stream.fileName = contents;
-                fileContents(stream);
-              }
-          });
-      }
-    });
-
-    function fileContents(stream) {
+    contents.map(function (contents) {
+        if (contents instanceof Stream.Readable) {
+            contents.fileName = contents.fileName || '<anonymous>';
+            return contents;
+        } else {
+            var stream = fs.createReadStream(contents);
+            stream.fileName = contents;
+            return stream;
+        }
+    }).forEach(function (stream) {
         var contents = new Buffer('');
         var hash = crypto.createHash(options.digest);
         hash.on('error', mapEvents.emit.bind(mapEvents, 'error'));
@@ -94,8 +87,7 @@ module.exports = function hashmark(contents, options, callback) {
             }
         });
         stream.pipe(hash, { end: false });
-    }
-
+    });
     return mapEvents.on('file', function (fileName, newFileName) {
         map[path.relative(options.cwd, fileName)] = path.relative(options.cwd, newFileName);
         fileCount--;
