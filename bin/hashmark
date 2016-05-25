@@ -64,7 +64,7 @@ if (!cli.args.length) {
     }
     if (cli.args.length) {
         files = cli.args.reduce(function(files, pattern) {
-            return files.concat(cli.glob.sync(path.join(cli.options.cwd, pattern)));
+            return files.concat(cli.glob.sync(path.join(cli.options.cwd, pattern), {nodir: true}));
         }, []);
     }
     hash(files, cli.options).on('end', function (map) {
